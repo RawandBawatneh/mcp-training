@@ -1,0 +1,20 @@
+{
+  "name": "todo-mcp-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A simple To-Do List MCP server for Week 1 of MCP training.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "inspect": "npm run build && npx -y @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.4",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.9.2"
+  }
+}
