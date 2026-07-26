@@ -1,18 +1,18 @@
-# To-Do List MCP Server
+# Greeting MCP Server
 
 ## Overview
 
-This project is a simple Model Context Protocol (MCP) server built with Node.js, TypeScript, the official MCP TypeScript SDK, and stdio transport.
+This project is a simple Model Context Protocol (MCP) server built with Node.js, TypeScript, the official MCP TypeScript SDK, Zod, and stdio transport.
 
-It exposes a single `create_todo` tool that validates input with Zod and stores todo items in memory for the current process only. The project is designed as a training example for learning how to build and run a basic MCP server locally.
+It exposes two tools, `greet` and `introduce_me`, both validated with Zod and served over stdio. The project is designed as a training example for learning how to build and run a basic MCP server locally.
 
 ## Features
 
 - MCP server built with the official TypeScript SDK
 - Stdio transport for local MCP clients and MCP Inspector
 - Zod-based input validation for tool requests
-- In-memory todo storage that resets when the process stops
-- Clear runtime error handling and structured responses
+- Clear tool descriptions and structured text responses
+- No use of `console.log()` so stdio communication stays clean
 
 ## Prerequisites
 
@@ -76,40 +76,53 @@ There is no separate automated test script in this repository. The supported way
 
 ## Usage
 
-The server currently provides one tool:
+The server currently provides two tools:
 
-### `create_todo`
+### `greet`
 
-Input fields:
+Input schema:
 
-- `title`: A required string, trimmed and limited to 3–120 characters.
-- `description`: An optional string, trimmed and limited to 500 characters.
+- `name`: Required string.
+- Empty strings are rejected.
+- Non-string values are rejected.
 
-Example request:
-
-```json
-{
-  "title": "Finish MCP assignment",
-  "description": "Verify the create_todo tool in MCP Inspector"
-}
-```
-
-Example successful response:
+Example input:
 
 ```json
 {
-  "success": true,
-  "message": "Task created successfully",
-  "todo": {
-    "id": 1,
-    "title": "Finish MCP assignment",
-    "description": "Verify the create_todo tool in MCP Inspector",
-    "completed": false
-  }
+  "name": "Ahmed"
 }
 ```
 
-Because the todos are stored in memory, the list resets whenever the server restarts.
+Example output:
+
+```text
+Hello, Rawand Bawatneh!
+```
+
+### `introduce_me`
+
+Input schema:
+
+- `name`: Required string.
+- Empty strings are rejected.
+- Non-string values are rejected.
+
+Example input:
+
+```json
+{
+  "name": "Ahmed"
+}
+```
+
+Example output:
+
+```text
+Hello Ahmed! This MCP server was created by Rawand Bawatneh.
+```
+
+The `greet` tool always returns Rawand Bawatneh’s full name in the response, while `introduce_me` echoes the submitted name and mentions the server creator.
 
 ## Project Structure
 
@@ -123,8 +136,18 @@ Because the todos are stored in memory, the list resets whenever the server rest
 
 - If `npm start` fails with a missing file error, run `npm run build` first so `dist/index.js` exists.
 - If `npm run inspect` fails to start, make sure your machine can download packages through `npx`, because MCP Inspector is fetched automatically the first time it runs.
-- If the tool returns a validation error, check that `title` is present and between 3 and 120 characters after trimming.
+- If the tool returns a validation error, check that `name` is present, is a string, and is not empty after trimming.
 - If nothing appears in the inspector, confirm that you are running the script from `week-01/todo-mcp-server` and that the server was built successfully.
+
+## MCP Inspector Command
+
+Launch MCP Inspector with:
+
+```powershell
+npm run inspect
+```
+
+That script runs `npm run build` and then starts Inspector with `npx -y @modelcontextprotocol/inspector node dist/index.js`.
 
 ## Academy
 

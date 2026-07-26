@@ -2,85 +2,74 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-type TodoItem = {
-  id: number;
-  title: string;
-  description?: string;
-  completed: boolean;
-};
+const greetInputSchema = z.object({
+  name: z
+    .string({ invalid_type_error: "Name must be a string." })
+    .trim()
+    .min(1, "Name cannot be empty.")
+    .describe("A required name value used for validation."),
+});
 
-type CreateTodoResponse = {
-  success: true;
-  message: string;
-  todo: TodoItem;
-};
-
-const todoInputSchema = {
-  title: z.string().trim().min(3, "Title must be at least 3 characters long.").max(120, "Title must be at most 120 characters long."),
-  description: z.string().trim().max(500, "Description must be at most 500 characters long.").optional(),
-};
+const introduceMeInputSchema = z.object({
+  name: z
+    .string({ invalid_type_error: "Name must be a string." })
+    .trim()
+    .min(1, "Name cannot be empty.")
+    .describe("The name to use in the greeting."),
+});
 
 const server = new McpServer({
   name: "todo-mcp-server",
   version: "1.0.0",
 });
 
-const todos: TodoItem[] = [];
-
 function writeLog(message: string): void {
   process.stderr.write(`[todo-mcp-server] ${message}\n`);
 }
 
-function buildResponse(todo: TodoItem): CreateTodoResponse {
+function createTextResponse(text: string) {
   return {
-    success: true,
-    message: "Task created successfully",
-    todo,
+    content: [
+      {
+        type: "text" as const,
+        text,
+      },
+    ],
   };
 }
 
 server.registerTool(
-  "create_todo",
+  "greet",
   {
-    description: "Create a new todo item.",
-    inputSchema: todoInputSchema,
+    description: "Greet Rawand Bawatneh using a validated name input.",
+    inputSchema: greetInputSchema,
+  },
+  async () => {
+    return createTextResponse("Hello, Rawand Bawatneh!");
+  },
+);
+
+server.registerTool(
+  "introduce_me",
+  {
+    description: "Introduce the server and mention its creator.",
+    inputSchema: introduceMeInputSchema,
   },
   async (input) => {
-    try {
-      const nextTodo: TodoItem = {
-        id: todos.length + 1,
-        title: input.title.trim(),
-        completed: false,
-      };
-
-      if (typeof input.description === "string") {
-        nextTodo.description = input.description.trim();
-      }
-
-      todos.push(nextTodo);
-
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(buildResponse(nextTodo), null, 2),
-          },
-        ],
-      };
-    } catch (error) {
-      writeLog(`create_todo failed: ${error instanceof Error ? error.message : String(error)}`);
-      throw new Error("Failed to create todo item.");
-    }
-  }
+    return createTextResponse(
+      `Hello ${input.name}! This MCP server was created by Rawand Bawatneh.`,
+    );
+  },
 );
 
 async function main(): Promise<void> {
   try {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    writeLog("Server connected over stdio.");
   } catch (error) {
-    writeLog(`Fatal startup error: ${error instanceof Error ? error.message : String(error)}`);
+    writeLog(
+      `Fatal startup error: ${error instanceof Error ? error.message : String(error)}`,
+    );
     process.exit(1);
   }
 }
